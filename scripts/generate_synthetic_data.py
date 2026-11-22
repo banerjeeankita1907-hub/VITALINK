@@ -30,7 +30,7 @@ def main() -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     start = date(2025, 1, 1)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\\n")
         writer.writerow(["date", "sku", "demand_units"])
         for offset in range(120):
             day = start + timedelta(days=offset)
