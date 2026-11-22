@@ -77,6 +77,14 @@
       <section class="panel scenario-panel">
         <div class="panel-head"><div><p class="eyebrow">WHAT-IF LAB</p><h2>Stress-test the supply network</h2><p class="section-copy">Re-optimize the network under plausible supply and demand shocks.</p></div><span class="tag warning-tag">SCENARIO ANALYSIS</span></div>
         <div class="scenario-grid" id="scenario-grid"><div class="empty">Loading scenarios…</div></div>
+        <div class="scenario-controls">
+          <div class="control-field"><label for="custom-demand">Demand multiplier</label><select id="custom-demand"><option value="1">Normal demand</option><option value="1.1">+10% demand</option><option value="1.25" selected>+25% demand</option><option value="1.5">+50% demand</option></select></div>
+          <div class="control-field"><label for="custom-outage">Supplier outage</label><select id="custom-outage"><option value="">No supplier outage</option></select></div>
+          <div class="control-field"><label for="custom-delay">Supplier delay</label><select id="custom-delay"><option value="">No supplier delay</option></select></div>
+          <div class="control-field"><label for="custom-delay-days">Extra lead time</label><select id="custom-delay-days"><option value="0">0 days</option><option value="2">+2 days</option><option value="4">+4 days</option><option value="6">+6 days</option><option value="8">+8 days</option></select></div>
+          <button class="secondary-button" id="run-scenario-button">Run custom stress test <span>↗</span></button>
+        </div>
+        <div class="custom-result" id="custom-result" role="status">Select a demand or supply shock to run a custom scenario.</div>
       </section>
 
       <section class="two-col lower-grid">
@@ -92,6 +100,16 @@
           <div class="quality-row"><span>Seasonal-naive WAPE</span><b id="forecast-baseline">—</b></div>
           <p class="small-note" id="forecast-note">Metrics are computed on a rolling holdout from generated data. Model choice must be validated on real demand.</p>
         </article>
+      </section>
+
+      <section class="panel benchmark-panel">
+        <div class="panel-head"><div><p class="eyebrow">POLICY BENCHMARK</p><h2>MILP versus nominal-price buying</h2><p class="section-copy">Same demand, inventory, supplier limits and cost terms; the baseline uses a transparent greedy allocation.</p></div><span class="tag">MATCHED INPUTS</span></div>
+        <div class="benchmark-grid">
+          <div class="benchmark-metric"><span>OPTIMIZED MILP COST</span><b id="benchmark-milp-cost">—</b><small id="benchmark-milp-service">—</small></div>
+          <div class="benchmark-metric"><span>GREEDY BASELINE COST</span><b id="benchmark-greedy-cost">—</b><small id="benchmark-greedy-service">—</small></div>
+          <div class="benchmark-metric delta-metric"><span>MODELED COST DIFFERENCE</span><b id="benchmark-cost-delta">—</b><small id="benchmark-service-delta">—</small></div>
+        </div>
+        <p class="small-note" id="benchmark-caveat">The difference is an outcome for one synthetic instance, not evidence of general superiority.</p>
       </section>
 
       <footer>
