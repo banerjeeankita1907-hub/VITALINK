@@ -18,4 +18,4 @@ def test_supplier_scorecard_is_transparent_and_sorted():
         assert rows
         assert all(0 <= row["score"] <= 100 for row in rows)
         assert rows == sorted(rows, key=lambda row: -row["score"])
-        assert sum(row["weights"].values()) == 1.0
+        assert all(sum(item["weights"].values()) == 1.0 for item in rows)
