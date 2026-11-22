@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Disruption-aware supply-chain digital twin and procurement decision-support prototype"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 dependencies = ["numpy>=1.26", "scipy>=1.11", "fastapi>=0.110", "uvicorn[standard]>=0.29", "pydantic>=2.5"]
 
 [project.optional-dependencies]
