@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from .config import WEB_DIR, initial_inventory, suppliers_config
 from .optimizer import OptimizationError
-from .service import build_forecast, build_overview, create_plan
+from .service import build_forecast, build_overview, create_plan, create_policy_comparison
 
 app = FastAPI(
     title="VITALINK",
@@ -74,6 +74,21 @@ def optimize(payload: OptimizeRequest) -> dict[str, Any]:
         return create_plan(
             payload.demand,
             payload.inventory or initial_inventory(),
+            horizon_days=payload.horizon_days,
+            storage_capacity_units=payload.storage_capacity_units,
+            budget_inr=payload.budget_inr,
+            risk_aversion=payload.risk_aversion,
+        )
+    except (ValueError, OptimizationError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/api/compare")
+def compare(payload: OptimizeRequest) -> dict[str, Any]:
+    try:
+        return create_policy_comparison(
+            payload.demand,
+            payload.inventory,
             horizon_days=payload.horizon_days,
             storage_capacity_units=payload.storage_capacity_units,
             budget_inr=payload.budget_inr,
