@@ -29,7 +29,7 @@ The initial scope is one aggregate distribution warehouse supplied by a small su
 | Disruption digital twin | Demand spike, supplier outage, lead-time delay and compound scenario re-optimization |
 | Supplier assessment | Transparent weighted reliability / lead time / price / carbon scorecard |
 | Dashboard | Responsive control tower with forecasts, KPIs, order lines, SKU outlook, supplier scorecard and stress tests |
-| API | FastAPI endpoints for overview, forecast, optimization and custom simulation |
+| API | FastAPI endpoints for overview, forecast, optimization, matched policy comparison and custom simulation |
 | Engineering | pytest suite, Python CI matrix, Dockerfile and Compose |
 
 ## Launch locally
@@ -72,6 +72,14 @@ Re-optimize under a different risk policy and cash budget:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/optimize \
+  -H "Content-Type: application/json" \
+  -d '{"horizon_days":7,"risk_aversion":3.5,"budget_inr":85000}'
+```
+
+Compare the MILP policy with the cheapest-nominal-price greedy baseline on matched inputs:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/compare \
   -H "Content-Type: application/json" \
   -d '{"horizon_days":7,"risk_aversion":3.5,"budget_inr":85000}'
 ```
