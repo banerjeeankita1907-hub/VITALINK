@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import math
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -34,10 +35,14 @@ def main() -> None:
         for offset in range(120):
             day = start + timedelta(days=offset)
             for sku, base, amplitude, trend, noise in PRODUCTS:
-                seasonal = 1 + amplitude * __import__("math").sin((offset / 30) * __import__("math").pi * 2)
+                # Match JavaScript Date.getUTCDay() used for the original dataset:
+                # Python weekday() is Monday=0, while the synthetic weekly array is Sunday=0.
+                weekday_index = (day.weekday() + 1) % 7
+                seasonal = 1 + amplitude * math.sin((offset / 30) * math.pi * 2)
                 growth = 1 + trend * offset / 120
                 jitter = (random_value() * 2 - 1) * noise
-                demand = max(1, round(base * WEEKLY[day.weekday()] * seasonal * growth + jitter))
+                raw_demand = base * WEEKLY[weekday_index] * seasonal * growth + jitter
+                demand = max(1, math.floor(raw_demand + 0.5))
                 writer.writerow([day.isoformat(), sku, demand])
 
 
