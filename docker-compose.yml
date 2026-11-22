@@ -1,0 +1,8 @@
+services:
+  vitalink:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      VITALINK_ENV: demo
+    restart: unless-stopped

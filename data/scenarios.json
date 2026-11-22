@@ -1,0 +1,7 @@
+[
+  {"scenario_id":"BASELINE","name":"Baseline operations","description":"Normal supplier capacity, lead times and forecast demand.","demand_multiplier":1.0},
+  {"scenario_id":"DEMAND_SPIKE","name":"Demand rises 25%","description":"A local demand shock increases every SKU's requirement by 25%.","demand_multiplier":1.25},
+  {"scenario_id":"FARM_OUTAGE","name":"Farm cooperative outage","description":"Eastern Farm Cooperative becomes unavailable during the planning window.","demand_multiplier":1.0,"supplier_outage":"FARM_COOP"},
+  {"scenario_id":"AGG_DELAY","name":"Aggregator delay","description":"Regional aggregator lead time increases by four days.","demand_multiplier":1.0,"supplier_delay":{"supplier_id":"REGIONAL_AGG","extra_days":4}},
+  {"scenario_id":"COMPOUND_SHOCK","name":"Compound disruption","description":"Demand rises 20%, the farm cooperative is unavailable and the aggregator is delayed by two days.","demand_multiplier":1.2,"supplier_outage":"FARM_COOP","supplier_delay":{"supplier_id":"REGIONAL_AGG","extra_days":2}}
+]

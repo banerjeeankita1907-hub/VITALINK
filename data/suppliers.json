@@ -1,0 +1,9 @@
+{
+  "suppliers": [
+    {"supplier_id":"FARM_COOP","name":"Eastern Farm Cooperative","region":"West Bengal","capacity_units":720,"lead_time_days":1,"reliability":0.94,"fixed_order_cost":95,"unit_costs":{"TOMATO":29.5,"ONION":21.5},"minimum_order_quantities":{"TOMATO":30,"ONION":30},"emissions_kg_per_unit":{"TOMATO":0.11,"ONION":0.09}},
+    {"supplier_id":"REGIONAL_AGG","name":"Regional Fresh Aggregator","region":"Eastern India","capacity_units":1450,"lead_time_days":2,"reliability":0.975,"fixed_order_cost":140,"unit_costs":{"TOMATO":34.0,"ONION":25.0,"RICE":50.0,"MILK":32.0},"minimum_order_quantities":{"TOMATO":40,"ONION":40,"RICE":50,"MILK":60},"emissions_kg_per_unit":{"TOMATO":0.20,"ONION":0.14,"RICE":0.39,"MILK":0.23}},
+    {"supplier_id":"WHOLESALE_HUB","name":"Kolkata Wholesale Hub","region":"Kolkata","capacity_units":980,"lead_time_days":1,"reliability":0.88,"fixed_order_cost":55,"unit_costs":{"TOMATO":28.5,"ONION":20.8},"minimum_order_quantities":{"TOMATO":25,"ONION":25},"emissions_kg_per_unit":{"TOMATO":0.25,"ONION":0.18}},
+    {"supplier_id":"DAIRY_NET","name":"Dairy Direct Network","region":"West Bengal","capacity_units":1150,"lead_time_days":1,"reliability":0.985,"fixed_order_cost":75,"unit_costs":{"MILK":28.8},"minimum_order_quantities":{"MILK":80},"emissions_kg_per_unit":{"MILK":0.17}},
+    {"supplier_id":"RICE_MILL","name":"Bengal Rice Millers","region":"Burdwan","capacity_units":650,"lead_time_days":3,"reliability":0.99,"fixed_order_cost":110,"unit_costs":{"RICE":47.5},"minimum_order_quantities":{"RICE":100},"emissions_kg_per_unit":{"RICE":0.34}}
+  ]
+}

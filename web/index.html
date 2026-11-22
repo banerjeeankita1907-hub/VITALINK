@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a2a">
+  <title>VITALINK | Supply Chain Control Tower</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/">
+        <span class="brand-mark">V</span>
+        <span><strong>VITALINK</strong><small>SUPPLY CHAIN INTELLIGENCE</small></span>
+      </a>
+      <div class="top-meta">
+        <span class="live-dot"></span>
+        <span>DEMO NETWORK</span>
+        <span class="divider"></span>
+        <span id="last-updated">Connecting…</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">INTERDISCIPLINARY DIGITAL TWIN · INDIA FOOD NETWORK</p>
+          <h1>See the disruption.<br><span>Decide before it lands.</span></h1>
+          <p class="hero-copy">A decision-support prototype for demand planning, supplier risk, inventory and resilient procurement.</p>
+        </div>
+        <div class="hero-chip"><span class="chip-icon">◈</span><span><b id="horizon-label">7-DAY</b><small>PLANNING WINDOW</small></span></div>
+      </section>
+
+      <section class="notice" id="data-notice">
+        <span class="notice-icon">ⓘ</span>
+        <span>Research demo using generated synthetic demand history. Do not use these recommendations for real purchasing until calibrated with verified operating data.</span>
+      </section>
+
+      <section class="kpi-grid" aria-label="Supply chain key performance indicators">
+        <article class="kpi-card"><div class="kpi-label">FORECAST DEMAND</div><div class="kpi-value" id="kpi-demand">—</div><div class="kpi-foot">units · next planning window</div></article>
+        <article class="kpi-card accent"><div class="kpi-label">EXPECTED SERVICE LEVEL</div><div class="kpi-value" id="kpi-service">—</div><div class="kpi-foot">reliability-adjusted plan</div></article>
+        <article class="kpi-card"><div class="kpi-label">PLANNED TOTAL COST</div><div class="kpi-value" id="kpi-cost">—</div><div class="kpi-foot">₹ · incl. risk, carbon, holding</div></article>
+        <article class="kpi-card"><div class="kpi-label">EXPECTED SHORTAGE</div><div class="kpi-value" id="kpi-shortage">—</div><div class="kpi-foot">unmet units · expected value</div></article>
+      </section>
+
+      <section class="main-grid">
+        <article class="panel chart-panel">
+          <div class="panel-head"><div><p class="eyebrow">DEMAND SIGNAL</p><h2>Network demand trajectory</h2></div><span class="legend"><i></i>Observed <i class="forecast-dot"></i>Forecast</span></div>
+          <canvas id="demand-chart" width="920" height="300" aria-label="Historical and forecast demand chart"></canvas>
+          <div class="chart-foot"><span>Daily units · all four product categories</span><span id="data-range">—</span></div>
+        </article>
+        <article class="panel policy-panel">
+          <div class="panel-head"><div><p class="eyebrow">MODEL CONTROLS</p><h2>Decision policy</h2></div><span class="tag">LIVE OPTIMIZER</span></div>
+          <label for="risk-slider">Supplier reliability risk aversion <b id="risk-value">2.0×</b></label>
+          <input id="risk-slider" type="range" min="0" max="8" step=".5" value="2">
+          <div class="range-ends"><span>Cost-first</span><span>Risk-sensitive</span></div>
+          <label for="budget-input">Optional procurement budget (₹)</label>
+          <input id="budget-input" class="number-input" type="number" min="0" placeholder="No budget cap">
+          <button class="primary-button" id="optimize-button">Re-optimize procurement <span>↗</span></button>
+          <p class="small-note" id="optimizer-status">Uses mixed-integer optimization with capacity, MOQ, lead-time and storage constraints.</p>
+        </article>
+      </section>
+
+      <section class="two-col">
+        <article class="panel">
+          <div class="panel-head"><div><p class="eyebrow">PROCUREMENT PLAN</p><h2>Recommended purchase orders</h2></div><span class="tag" id="order-count">— ORDERS</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Supplier</th><th>Product</th><th>Qty</th><th>Lead</th><th>Expected delivery</th></tr></thead><tbody id="orders-body"><tr><td colspan="5">Loading plan…</td></tr></tbody></table></div>
+          <p class="small-note">Order quantities are integer units. Expected receipts apply supplier reliability as a planning estimate.</p>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><div><p class="eyebrow">INVENTORY POSITION</p><h2>SKU-level outlook</h2></div><span class="tag">7-DAY</span></div>
+          <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Demand</th><th>Shortage</th><th>Ending stock</th><th>Service</th></tr></thead><tbody id="sku-body"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
+        </article>
+      </section>
+
+      <section class="panel scenario-panel">
+        <div class="panel-head"><div><p class="eyebrow">WHAT-IF LAB</p><h2>Stress-test the supply network</h2><p class="section-copy">Re-optimize the network under plausible supply and demand shocks.</p></div><span class="tag warning-tag">SCENARIO ANALYSIS</span></div>
+        <div class="scenario-grid" id="scenario-grid"><div class="empty">Loading scenarios…</div></div>
+      </section>
+
+      <section class="two-col lower-grid">
+        <article class="panel">
+          <div class="panel-head"><div><p class="eyebrow">SUPPLIER INTELLIGENCE</p><h2>Supplier scorecard</h2></div><span class="tag">WEIGHTED POLICY</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Supplier</th><th>SKU</th><th>Score</th><th>Reliability</th><th>Lead</th></tr></thead><tbody id="supplier-body"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
+          <p class="small-note">A transparent screening score; not an objective truth. Weights should be agreed with procurement stakeholders.</p>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><div><p class="eyebrow">FORECAST QUALITY</p><h2>Rolling-origin evaluation</h2></div><span class="tag">HOLDOUT</span></div>
+          <div class="quality-number" id="forecast-wape">—</div><div class="quality-caption">WAPE · forecast baseline</div>
+          <div class="quality-row"><span>MAE</span><b id="forecast-mae">—</b></div>
+          <div class="quality-row"><span>Seasonal-naive WAPE</span><b id="forecast-baseline">—</b></div>
+          <p class="small-note" id="forecast-note">Metrics are computed on a rolling holdout from generated data. Model choice must be validated on real demand.</p>
+        </article>
+      </section>
+
+      <footer>
+        <div class="brand footer-brand"><span class="brand-mark">V</span><span><strong>VITALINK</strong><small>RESEARCH PROTOTYPE · v0.1.0</small></span></div>
+        <span>Forecasting · Optimization · Simulation · Decision support</span>
+        <a href="/docs" target="_blank" rel="noreferrer">API documentation ↗</a>
+      </footer>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

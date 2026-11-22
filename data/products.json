@@ -1,0 +1,13 @@
+{
+  "currency": "INR",
+  "planning_horizon_days": 7,
+  "storage_capacity_units": 2600,
+  "carbon_price_inr_per_kg": 0.75,
+  "risk_aversion": 2.0,
+  "products": [
+    {"sku":"TOMATO","name":"Tomato","category":"Fresh produce","unit_cost_reference":32.0,"holding_cost_per_unit":0.55,"stockout_penalty_per_unit":48.0,"shelf_life_days":5,"emissions_kg_per_unit":0.18,"initial_inventory":120},
+    {"sku":"ONION","name":"Onion","category":"Fresh produce","unit_cost_reference":24.0,"holding_cost_per_unit":0.35,"stockout_penalty_per_unit":36.0,"shelf_life_days":18,"emissions_kg_per_unit":0.12,"initial_inventory":150},
+    {"sku":"RICE","name":"Rice","category":"Staple","unit_cost_reference":52.0,"holding_cost_per_unit":0.18,"stockout_penalty_per_unit":65.0,"shelf_life_days":365,"emissions_kg_per_unit":0.42,"initial_inventory":240},
+    {"sku":"MILK","name":"Milk","category":"Dairy","unit_cost_reference":30.0,"holding_cost_per_unit":0.65,"stockout_penalty_per_unit":52.0,"shelf_life_days":4,"emissions_kg_per_unit":0.24,"initial_inventory":180}
+  ]
+}
