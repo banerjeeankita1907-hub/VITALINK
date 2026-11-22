@@ -136,7 +136,7 @@ def cheapest_nominal_greedy(
             "capacity_units": int(supplier["capacity_units"]),
             "planned_units": int(supplier["capacity_units"]) - remaining_capacity[supplier["supplier_id"]],
             "utilization_percent": round(
-                100 * (int(supplier["capacity_units"]) - remaining_capacity[supplier["supplier_id"]))
+                100 * (int(supplier["capacity_units"]) - remaining_capacity[supplier["supplier_id"]])
                 / int(supplier["capacity_units"]), 2
             ) if int(supplier["capacity_units"]) else 0.0,
         }
