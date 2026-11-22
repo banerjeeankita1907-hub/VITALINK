@@ -45,3 +45,31 @@ jobs:
           node-version: "24"
       - name: Check dashboard JavaScript syntax
         run: node --check web/app.js
+
+  container-smoke:
+    name: Docker image smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container image
+        run: docker build -t vitalink:ci .
+      - name: Start container and check live API
+        run: |
+          docker run -d --name vitalink-smoke -p 8000:8000 vitalink:ci
+          for attempt in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/health >/tmp/health.json; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:8000/
+          curl -fsS http://127.0.0.1:8000/style.css >/dev/null
+          curl -fsS http://127.0.0.1:8000/app.js >/dev/null
+          curl -fsS http://127.0.0.1:8000/api/overview >/tmp/overview.json
+          python -c "import json; d=json.load(open('/tmp/overview.json')); assert d['plan']['status']=='optimal'; assert len(d['scenarios'])==5; print('Container API smoke test passed')"
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs vitalink-smoke
+      - name: Remove container
+        if: always()
+        run: docker rm -f vitalink-smoke || true
