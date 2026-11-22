@@ -39,3 +39,22 @@ def test_optimize_endpoint_accepts_policy_controls():
 def test_custom_simulation_rejects_unknown_supplier():
     response = client.post("/api/simulate", json={"supplier_outage": "MISSING"})
     assert response.status_code == 422
+
+def test_matched_policy_comparison_endpoint():
+    response = client.post("/api/compare", json={"risk_aversion": 3.0, "horizon_days": 7})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["optimized_plan"]["status"] == "optimal"
+    assert payload["baseline_plan"]["status"] == "heuristic"
+    assert "modeled_cost_delta_inr" in payload["comparison"]
+
+
+def test_custom_supplier_outage_scenario_runs():
+    response = client.post(
+        "/api/simulate",
+        json={"demand_multiplier": 1.1, "supplier_outage": "FARM_COOP"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["supplier_outage"] == "FARM_COOP"
+    assert payload["kpis"]["service_level_percent"] >= 0
