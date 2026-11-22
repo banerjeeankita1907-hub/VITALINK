@@ -14,6 +14,7 @@ def cheapest_nominal_greedy(
     storage_capacity_units: int,
     risk_aversion: float = 2.0,
     carbon_price_inr_per_kg: float = 0.75,
+    budget_inr: float | None = None,
 ) -> dict[str, Any]:
     """A deliberately simple benchmark: cheapest nominal offers, one-pass greedy fill.
 
@@ -21,11 +22,13 @@ def cheapest_nominal_greedy(
     co-optimize supplier reliability, fixed ordering trade-offs, carbon, or all
     SKU allocations simultaneously. It exists as a transparent baseline.
     """
+    if budget_inr is not None and budget_inr < 0:
+        raise ValueError("budget_inr must be non-negative.")
+    budget_remaining = budget_inr
     remaining_capacity = {
         supplier["supplier_id"]: int(supplier["capacity_units"])
         for supplier in suppliers
     }
-    ordered_suppliers = {supplier["supplier_id"]: supplier for supplier in suppliers}
     sku_order = sorted(
         products,
         key=lambda sku: (
@@ -74,6 +77,14 @@ def cheapest_nominal_greedy(
             )
             storage_limited = floor(max_ending_receipt / reliability + 1e-9)
             quantity = min(available, max(needed, minimum), storage_limited)
+            fixed_line = float(supplier.get("fixed_order_cost", 0))
+            price = float(supplier["unit_costs"][sku])
+            if budget_remaining is not None:
+                if price > 0:
+                    affordable = floor(max(0.0, budget_remaining - fixed_line) / price)
+                    quantity = min(quantity, affordable)
+                elif fixed_line > budget_remaining:
+                    quantity = 0
             if quantity < minimum:
                 continue
 
@@ -81,15 +92,15 @@ def cheapest_nominal_greedy(
             remaining_capacity[supplier_id] -= quantity
             receipts += expected
             residual = max(0.0, residual - expected)
-            price = float(supplier["unit_costs"][sku])
             emissions = float(supplier.get("emissions_kg_per_unit", {}).get(
                 sku, product["emissions_kg_per_unit"]
             ))
-            fixed_line = float(supplier.get("fixed_order_cost", 0))
             purchase += quantity * price
             risk += quantity * price * risk_aversion * (1 - reliability)
             carbon += quantity * emissions * carbon_price_inr_per_kg
             fixed += fixed_line
+            if budget_remaining is not None:
+                budget_remaining -= quantity * price + fixed_line
             orders.append({
                 "supplier_id": supplier_id,
                 "supplier_name": supplier["name"],
