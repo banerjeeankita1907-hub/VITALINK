@@ -27,6 +27,10 @@ Optional JSON fields:
 
 Returns order lines, SKU inventory balance, service level, supplier utilization and objective cost breakdown.
 
+## `POST /api/compare`
+
+Accepts the same request fields as `POST /api/optimize`. Returns both the optimal MILP plan and a cheapest-nominal-price greedy baseline, run with matching demand, inventory, horizon, capacity, budget and cost-policy inputs, plus a side-by-side cost/service-level summary. The greedy policy is a heuristic, not an optimal benchmark.
+
 ## `POST /api/simulate`
 
 Optional JSON fields:
