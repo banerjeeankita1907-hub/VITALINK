@@ -15,7 +15,8 @@ def supplier_scorecard(
             continue
         prices = [float(s["unit_costs"][sku]) for s in candidates]
         emissions = [float(s.get("emissions_kg_per_unit", {}).get(sku, product["emissions_kg_per_unit"])) for s in candidates]
-        max_lead = max(float(s["lead_time_days"]) for s in candidates) or 1.0
+        lead_times = [float(s["lead_time_days"]) for s in candidates]
+        min_lead, max_lead = min(lead_times), max(lead_times)
         min_price, max_price = min(prices), max(prices)
         min_carbon, max_carbon = min(emissions), max(emissions)
         for supplier in candidates:
@@ -23,7 +24,10 @@ def supplier_scorecard(
             carbon = float(supplier.get("emissions_kg_per_unit", {}).get(sku, product["emissions_kg_per_unit"]))
             price_score = 1.0 if max_price == min_price else 1 - (price - min_price) / (max_price - min_price)
             carbon_score = 1.0 if max_carbon == min_carbon else 1 - (carbon - min_carbon) / (max_carbon - min_carbon)
-            lead_score = 1 - float(supplier["lead_time_days"]) / max_lead
+            lead_score = (
+                1.0 if max_lead == min_lead
+                else (max_lead - float(supplier["lead_time_days"])) / (max_lead - min_lead)
+            )
             components = {
                 "reliability": float(supplier["reliability"]),
                 "lead_time": lead_score,
