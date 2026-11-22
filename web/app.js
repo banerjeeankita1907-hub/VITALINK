@@ -109,6 +109,100 @@ function renderSuppliers(scorecard, suppliers) {
   }
 }
 
+function renderPolicyComparison(comparison) {
+  if (!comparison) return;
+  const optimized = comparison.optimized_milp;
+  const baseline = comparison.cheapest_nominal_greedy;
+  const delta = Number(comparison.modeled_cost_delta_inr || 0);
+  const serviceDelta = Number(comparison.service_level_delta_pp || 0);
+  setText("benchmark-milp-cost", money(optimized.total_cost_inr));
+  setText("benchmark-milp-service", `Service level: ${pct(optimized.service_level_percent)} · shortage: ${number(optimized.shortage_units)}`);
+  setText("benchmark-greedy-cost", money(baseline.total_cost_inr));
+  setText("benchmark-greedy-service", `Service level: ${pct(baseline.service_level_percent)} · shortage: ${number(baseline.shortage_units)}`);
+  setText("benchmark-cost-delta", `${delta >= 0 ? "+" : "−"}${money(Math.abs(delta))}`);
+  setText("benchmark-service-delta", `${serviceDelta >= 0 ? "+" : "−"}${Math.abs(serviceDelta).toFixed(2)} percentage points in service level`);
+  setText("benchmark-caveat", comparison.caveat || "Compare service level and modeled cost together; do not infer real savings from synthetic inputs.");
+}
+
+function renderScenarioControls(suppliers) {
+  const outageSelect = document.getElementById("custom-outage");
+  const delaySelect = document.getElementById("custom-delay");
+  if (!outageSelect || !delaySelect) return;
+  const addOption = (select, value, label) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    select.append(option);
+  };
+  outageSelect.replaceChildren();
+  delaySelect.replaceChildren();
+  addOption(outageSelect, "", "No supplier outage");
+  addOption(delaySelect, "", "No supplier delay");
+  for (const supplier of suppliers) {
+    addOption(outageSelect, supplier.supplier_id, supplier.name);
+    addOption(delaySelect, supplier.supplier_id, supplier.name);
+  }
+}
+
+async function runCustomScenario() {
+  if (!overview) return;
+  const button = document.getElementById("run-scenario-button");
+  const resultBox = document.getElementById("custom-result");
+  button.disabled = true;
+  button.textContent = "Re-solving scenario…";
+  resultBox.textContent = "Applying scenario and re-optimizing supplier allocation…";
+  try {
+    const outage = document.getElementById("custom-outage").value;
+    const delayedSupplier = document.getElementById("custom-delay").value;
+    const payload = {
+      demand_multiplier: Number(document.getElementById("custom-demand").value)
+    };
+    if (outage) payload.supplier_outage = outage;
+    if (delayedSupplier) {
+      payload.supplier_delay_id = delayedSupplier;
+      payload.extra_lead_days = Number(document.getElementById("custom-delay-days").value);
+    }
+    const response = await fetch("/api/simulate", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || "Scenario simulation failed");
+    resultBox.replaceChildren();
+    const heading = document.createElement("strong");
+    heading.textContent = data.name;
+    const details = document.createElement("div");
+    details.textContent = [
+      `Demand ×${Number(data.demand_multiplier).toFixed(2)}`,
+      data.supplier_outage ? `Outage: ${data.supplier_outage}` : null,
+      data.supplier_delay ? `Delay: ${data.supplier_delay.supplier_id} +${data.supplier_delay.extra_days} days` : null
+    ].filter(Boolean).join(" · ");
+    const values = document.createElement("div");
+    values.className = "result-values";
+    const metrics = [
+      ["Expected service level", pct(data.kpis.service_level_percent)],
+      ["Modeled total cost", money(data.kpis.total_cost_inr)],
+      ["Expected shortage", number(data.kpis.expected_shortage_units)]
+    ];
+    for (const [label, value] of metrics) {
+      const item = document.createElement("div");
+      const caption = document.createElement("span");
+      caption.textContent = label;
+      const metric = document.createElement("b");
+      metric.textContent = value;
+      item.append(caption, metric);
+      values.append(item);
+    }
+    resultBox.append(heading, details, values);
+  } catch (error) {
+    resultBox.textContent = error.message;
+  } finally {
+    button.disabled = false;
+    button.innerHTML = 'Run custom stress test <span>↗</span>';
+  }
+}
+
 function renderScenarios(scenarios) {
   const grid = document.getElementById("scenario-grid");
   grid.replaceChildren();
@@ -144,6 +238,8 @@ function renderOverview(data) {
   renderSku(data.plan);
   renderSuppliers(data.supplier_scorecard, data.suppliers);
   renderScenarios(data.scenarios);
+  renderPolicyComparison(data.policy_comparison);
+  renderScenarioControls(data.suppliers);
   drawDemandChart(data.chart);
 }
 
@@ -170,17 +266,20 @@ async function optimize() {
       risk_aversion: Number(document.getElementById("risk-slider").value)
     };
     if (budgetRaw !== "") payload.budget_inr = Number(budgetRaw);
-    const response = await fetch("/api/optimize", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const response = await fetch("/api/compare", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail || "Optimization failed");
-    overview.plan = result;
-    const kpis = result.kpis;
+    overview.plan = result.optimized_plan;
+    overview.policy_comparison = result.comparison;
+    renderPolicyComparison(result.comparison);
+    const plan = result.optimized_plan;
+    const kpis = plan.kpis;
     setText("kpi-demand", number(kpis.demand_units));
     setText("kpi-service", pct(kpis.service_level_percent));
     setText("kpi-cost", money(kpis.total_cost_inr));
     setText("kpi-shortage", number(kpis.expected_shortage_units));
-    renderOrders(result); renderSku(result);
-    setText("optimizer-status", `Optimal plan found. Objective: ${money(result.objective_value_inr)}. ${result.solver_message}`);
+    renderOrders(plan); renderSku(plan);
+    setText("optimizer-status", `Optimal plan found. Objective: ${money(plan.objective_value_inr)}. ${plan.solver_message}`);
   } catch (error) {
     setText("optimizer-status", error.message);
   } finally {
@@ -191,6 +290,7 @@ async function optimize() {
 
 document.getElementById("risk-slider").addEventListener("input", event => setText("risk-value", Number(event.target.value).toFixed(1) + "×"));
 document.getElementById("optimize-button").addEventListener("click", optimize);
+document.getElementById("run-scenario-button").addEventListener("click", runCustomScenario);
 window.addEventListener("resize", () => { if (overview) drawDemandChart(overview.chart); });
 loadOverview().catch(error => {
   setText("optimizer-status", error.message);
