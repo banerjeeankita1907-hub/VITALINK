@@ -76,3 +76,67 @@ def test_default_instance_comparator_uses_same_forecast_inputs():
     assert baseline["kpis"]["service_level_percent"] >= 0
     assert milp["kpis"]["total_cost_inr"] >= 0
     assert baseline["kpis"]["total_cost_inr"] >= 0
+
+
+def test_greedy_baseline_enforces_budget_including_fixed_order_cost():
+    products = {
+        "A": {
+            "name": "A",
+            "unit_cost_reference": 10,
+            "emissions_kg_per_unit": 0,
+            "holding_cost_per_unit": 0,
+            "stockout_penalty_per_unit": 100,
+        }
+    }
+    suppliers = [
+        {
+            "supplier_id": "SUPPLIER",
+            "name": "Supplier",
+            "capacity_units": 100,
+            "lead_time_days": 1,
+            "reliability": 1,
+            "fixed_order_cost": 5,
+            "unit_costs": {"A": 5},
+            "minimum_order_quantities": {"A": 10},
+            "emissions_kg_per_unit": {"A": 0},
+        }
+    ]
+    result = cheapest_nominal_greedy(
+        products, suppliers, {"A": 0}, {"A": 50},
+        horizon_days=7, storage_capacity_units=100,
+        risk_aversion=0, carbon_price_inr_per_kg=0, budget_inr=55,
+    )
+    assert result["orders"][0]["quantity_units"] == 10
+    assert result["cost_breakdown_inr"]["purchase"] + result["cost_breakdown_inr"]["fixed_order"] <= 55
+
+
+def test_greedy_baseline_does_not_break_moq_to_fit_budget():
+    products = {
+        "A": {
+            "name": "A",
+            "unit_cost_reference": 10,
+            "emissions_kg_per_unit": 0,
+            "holding_cost_per_unit": 0,
+            "stockout_penalty_per_unit": 100,
+        }
+    }
+    suppliers = [
+        {
+            "supplier_id": "SUPPLIER",
+            "name": "Supplier",
+            "capacity_units": 100,
+            "lead_time_days": 1,
+            "reliability": 1,
+            "fixed_order_cost": 5,
+            "unit_costs": {"A": 5},
+            "minimum_order_quantities": {"A": 10},
+            "emissions_kg_per_unit": {"A": 0},
+        }
+    ]
+    result = cheapest_nominal_greedy(
+        products, suppliers, {"A": 0}, {"A": 50},
+        horizon_days=7, storage_capacity_units=100,
+        risk_aversion=0, carbon_price_inr_per_kg=0, budget_inr=54,
+    )
+    assert result["orders"] == []
+    assert result["kpis"]["expected_shortage_units"] == 50
