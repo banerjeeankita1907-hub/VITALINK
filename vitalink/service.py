@@ -69,6 +69,69 @@ def create_plan(
     )
 
 
+def create_policy_comparison(
+    demand: dict[str, float] | None = None,
+    inventory: dict[str, int] | None = None,
+    *,
+    horizon_days: int | None = None,
+    storage_capacity_units: int | None = None,
+    budget_inr: float | None = None,
+    risk_aversion: float | None = None,
+) -> dict[str, Any]:
+    config = _runtime_config()
+    horizon = horizon_days or int(config["planning_horizon_days"])
+    forecast = build_forecast(horizon) if demand is None else None
+    selected_demand = forecast["demand_by_sku"] if demand is None else demand
+    selected_inventory = initial_inventory() if inventory is None else inventory
+    products = product_map()
+    suppliers = suppliers_config()
+    storage = storage_capacity_units or int(config["storage_capacity_units"])
+    risk = float(config["risk_aversion"] if risk_aversion is None else risk_aversion)
+    carbon_price = float(config["carbon_price_inr_per_kg"])
+    optimized = solve_procurement(
+        products, suppliers, selected_inventory, selected_demand,
+        horizon_days=horizon,
+        storage_capacity_units=storage,
+        budget_inr=budget_inr,
+        risk_aversion=risk,
+        carbon_price_inr_per_kg=carbon_price,
+    )
+    baseline = cheapest_nominal_greedy(
+        products, suppliers, selected_inventory, selected_demand,
+        horizon_days=horizon,
+        storage_capacity_units=storage,
+        risk_aversion=risk,
+        carbon_price_inr_per_kg=carbon_price,
+        budget_inr=budget_inr,
+    )
+    optimized_kpis = optimized["kpis"]
+    baseline_kpis = baseline["kpis"]
+    comparison = {
+        "optimized_milp": {
+            "total_cost_inr": optimized_kpis["total_cost_inr"],
+            "service_level_percent": optimized_kpis["service_level_percent"],
+            "shortage_units": optimized_kpis["expected_shortage_units"],
+        },
+        "cheapest_nominal_greedy": {
+            "total_cost_inr": baseline_kpis["total_cost_inr"],
+            "service_level_percent": baseline_kpis["service_level_percent"],
+            "shortage_units": baseline_kpis["expected_shortage_units"],
+        },
+        "modeled_cost_delta_inr": round(
+            baseline_kpis["total_cost_inr"] - optimized_kpis["total_cost_inr"], 2
+        ),
+        "service_level_delta_pp": round(
+            optimized_kpis["service_level_percent"] - baseline_kpis["service_level_percent"], 2
+        ),
+        "caveat": "One synthetic instance only; repeat across seeds, scenarios and calibrated field data before drawing general conclusions.",
+    }
+    return {
+        "optimized_plan": optimized,
+        "baseline_plan": baseline,
+        "comparison": comparison,
+    }
+
+
 def build_overview() -> dict[str, Any]:
     config = _runtime_config()
     forecast = build_forecast()
@@ -81,39 +144,14 @@ def build_overview() -> dict[str, Any]:
     risk = float(config["risk_aversion"])
     carbon_price = float(config["carbon_price_inr_per_kg"])
 
-    plan = solve_procurement(
-        products, suppliers, inventory, demand,
+    policy_results = create_policy_comparison(
+        demand, inventory,
         horizon_days=horizon,
         storage_capacity_units=storage,
         risk_aversion=risk,
-        carbon_price_inr_per_kg=carbon_price,
     )
-    baseline = cheapest_nominal_greedy(
-        products, suppliers, inventory, demand,
-        horizon_days=horizon,
-        storage_capacity_units=storage,
-        risk_aversion=risk,
-        carbon_price_inr_per_kg=carbon_price,
-    )
-    comparison = {
-        "optimized_milp": {
-            "total_cost_inr": plan["kpis"]["total_cost_inr"],
-            "service_level_percent": plan["kpis"]["service_level_percent"],
-            "shortage_units": plan["kpis"]["expected_shortage_units"],
-        },
-        "cheapest_nominal_greedy": {
-            "total_cost_inr": baseline["kpis"]["total_cost_inr"],
-            "service_level_percent": baseline["kpis"]["service_level_percent"],
-            "shortage_units": baseline["kpis"]["expected_shortage_units"],
-        },
-        "modeled_cost_delta_inr": round(
-            baseline["kpis"]["total_cost_inr"] - plan["kpis"]["total_cost_inr"], 2
-        ),
-        "service_level_delta_pp": round(
-            plan["kpis"]["service_level_percent"] - baseline["kpis"]["service_level_percent"], 2
-        ),
-        "caveat": "One synthetic instance only; repeat across seeds, scenarios and calibrated field data before drawing general conclusions.",
-    }
+    plan = policy_results["optimized_plan"]
+    comparison = policy_results["comparison"]
     scenarios = run_scenario_set(
         scenarios_config(),
         products=products,
